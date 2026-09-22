@@ -17,6 +17,7 @@ import {
   Activity,
   ChevronDown,
   Building,
+  ShoppingBag,
 } from 'lucide-react';
 import api from '../services/api';
 import { useCart } from '../context/CartContext';

@@ -9,6 +9,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
@@ -41,8 +42,9 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 
 function App() {
   return (
-    <Router>
-      <LanguageProvider>
+    <ErrorBoundary>
+      <Router>
+        <LanguageProvider>
         <AuthProvider>
           <CartProvider>
             <NotificationProvider>
@@ -173,6 +175,7 @@ function App() {
         </AuthProvider>
       </LanguageProvider>
     </Router>
+    </ErrorBoundary>
   );
 }
 
