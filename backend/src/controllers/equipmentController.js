@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Equipment from '../models/Equipment.js';
 import Category from '../models/Category.js';
 import { uploadImageToCloudinary } from '../services/cloudinaryService.js';
@@ -165,18 +166,27 @@ export const createEquipment = async (req, res, next) => {
     req.body.provider = req.user.id;
     req.body.providerName = req.user.companyName || req.user.name;
 
-    // Verify category
-    let categoryDoc;
-    if (req.body.category) {
+    // Verify category safely
+    let categoryDoc = null;
+    if (req.body.category && mongoose.Types.ObjectId.isValid(req.body.category)) {
       categoryDoc = await Category.findById(req.body.category);
     }
     if (!categoryDoc && req.body.categoryName) {
       categoryDoc = await Category.findOne({ name: req.body.categoryName });
     }
+    if (!categoryDoc) {
+      // Find fallback category
+      categoryDoc = await Category.findOne({ isActive: true });
+    }
 
     if (categoryDoc) {
       req.body.category = categoryDoc._id;
       req.body.categoryName = categoryDoc.name;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select a valid healthcare category.',
+      });
     }
 
     // Default calculations if not provided

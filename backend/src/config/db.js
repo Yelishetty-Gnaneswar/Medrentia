@@ -5,9 +5,23 @@ const connectDB = async () => {
   
   try {
     const conn = await mongoose.connect(primaryUri, {
-      serverSelectionTimeoutMS: 2500, // Quick timeout to fallback in dev if local mongod not started
+      serverSelectionTimeoutMS: 5000,
     });
     console.log(`[MedRentia] MongoDB Connected: ${conn.connection.host}`);
+
+    // Automatically ensure essential baseline categories and catalog exist
+    try {
+      const Category = mongoose.models.Category || (await import('../models/Category.js')).default;
+      const count = await Category.countDocuments();
+      if (count === 0) {
+        console.log('[MedRentia] Categories collection empty on connected database. Seeding baseline categories...');
+        const { seedDataInternal } = await import('../utils/seedHelper.js');
+        await seedDataInternal();
+      }
+    } catch (seedErr) {
+      console.warn('[MedRentia] Seed verification notice:', seedErr.message);
+    }
+
     return conn;
   } catch (error) {
     console.warn(`[MedRentia] Could not connect to primary MongoDB at ${primaryUri}`);

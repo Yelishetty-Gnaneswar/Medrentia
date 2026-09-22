@@ -78,16 +78,17 @@ const ProviderAddEquipment = () => {
     const fetchCategories = async () => {
       try {
         const res = await api.get('/categories');
-        if (res.data.success && res.data.data.length > 0) {
-          setCategories(res.data.data);
+        const catList = res.data?.data || (Array.isArray(res.data) ? res.data : []);
+        if (catList.length > 0) {
+          setCategories(catList);
           setFormData((prev) => ({
             ...prev,
-            category: res.data.data[0]._id,
-            categoryName: res.data.data[0].name,
+            category: prev.category || catList[0]._id,
+            categoryName: prev.categoryName || catList[0].name,
           }));
         }
       } catch (err) {
-        console.error(err);
+        console.error('Error loading categories:', err);
       }
     };
     fetchCategories();
@@ -96,7 +97,7 @@ const ProviderAddEquipment = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'category') {
-      const selectedCat = categories.find((c) => c._id === value);
+      const selectedCat = categories.find((c) => String(c._id) === String(value));
       setFormData((prev) => ({
         ...prev,
         category: value,
@@ -126,6 +127,21 @@ const ProviderAddEquipment = () => {
     setErrorMsg('');
 
     try {
+      let selectedCatId = formData.category;
+      let selectedCatName = formData.categoryName;
+
+      // Auto-assign first category if available and none set
+      if (!selectedCatId && categories.length > 0) {
+        selectedCatId = categories[0]._id;
+        selectedCatName = categories[0].name;
+      }
+
+      if (!selectedCatId) {
+        setErrorMsg('Please select a healthcare category before submitting.');
+        setLoading(false);
+        return;
+      }
+
       const features = formData.featuresText
         .split(',')
         .map((f) => f.trim())
@@ -133,8 +149,8 @@ const ProviderAddEquipment = () => {
 
       const payload = {
         name: formData.name,
-        category: formData.category,
-        categoryName: formData.categoryName,
+        category: selectedCatId,
+        categoryName: selectedCatName,
         shortDescription: formData.shortDescription,
         description: formData.description,
         images: [formData.imageUrl || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80'],
@@ -215,8 +231,12 @@ const ProviderAddEquipment = () => {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
+                  required
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medblue-500 font-bold text-slate-800"
                 >
+                  {categories.length === 0 ? (
+                    <option value="" disabled>Loading healthcare categories...</option>
+                  ) : null}
                   {categories.map((cat) => (
                     <option key={cat._id} value={cat._id}>
                       {cat.name}

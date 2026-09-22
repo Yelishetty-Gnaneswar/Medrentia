@@ -6,7 +6,18 @@ import Equipment from '../models/Equipment.js';
 // @access  Public
 export const getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find({ isActive: true }).sort('name');
+    let categories = await Category.find({ isActive: true }).sort('name');
+
+    // Failsafe: If categories are empty, initialize them automatically
+    if (categories.length === 0) {
+      try {
+        const { seedDataInternal } = await import('../utils/seedHelper.js');
+        await seedDataInternal();
+        categories = await Category.find({ isActive: true }).sort('name');
+      } catch (seedErr) {
+        console.warn('Auto-seed in getCategories warning:', seedErr.message);
+      }
+    }
 
     // Dynamically calculate accurate equipment counts
     const categoriesWithCount = await Promise.all(
