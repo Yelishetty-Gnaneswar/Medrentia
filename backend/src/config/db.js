@@ -9,17 +9,12 @@ const connectDB = async () => {
     });
     console.log(`[MedRentia] MongoDB Connected: ${conn.connection.host}`);
 
-    // Automatically ensure essential baseline categories and catalog exist
+    // Automatically ensure baseline categories exist independently
     try {
-      const Category = mongoose.models.Category || (await import('../models/Category.js')).default;
-      const count = await Category.countDocuments();
-      if (count === 0) {
-        console.log('[MedRentia] Categories collection empty on connected database. Seeding baseline categories...');
-        const { seedDataInternal } = await import('../utils/seedHelper.js');
-        await seedDataInternal();
-      }
+      const { seedCategoriesIfEmpty } = await import('../utils/seedHelper.js');
+      await seedCategoriesIfEmpty();
     } catch (seedErr) {
-      console.warn('[MedRentia] Seed verification notice:', seedErr.message);
+      console.warn('[MedRentia] Category seed check notice:', seedErr.message);
     }
 
     return conn;

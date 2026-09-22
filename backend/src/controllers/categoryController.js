@@ -8,11 +8,11 @@ export const getCategories = async (req, res, next) => {
   try {
     let categories = await Category.find({ isActive: true }).sort('name');
 
-    // Failsafe: If categories are empty, initialize them automatically
+    // Failsafe: If categories are empty, initialize them independently
     if (categories.length === 0) {
       try {
-        const { seedDataInternal } = await import('../utils/seedHelper.js');
-        await seedDataInternal();
+        const { seedCategoriesIfEmpty } = await import('../utils/seedHelper.js');
+        await seedCategoriesIfEmpty();
         categories = await Category.find({ isActive: true }).sort('name');
       } catch (seedErr) {
         console.warn('Auto-seed in getCategories warning:', seedErr.message);

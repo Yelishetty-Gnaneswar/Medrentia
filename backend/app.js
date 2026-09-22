@@ -22,6 +22,9 @@ import notificationRoutes from './src/routes/notificationRoutes.js';
 
 const app = express();
 
+// Trust reverse proxy (Required for Render, Vercel & express-rate-limit)
+app.set('trust proxy', 1);
+
 // Security HTTP headers
 app.use(helmet({ crossOriginResourcePolicy: false }));
 

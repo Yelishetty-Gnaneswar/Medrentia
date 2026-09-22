@@ -9,17 +9,112 @@ import Delivery from '../models/Delivery.js';
 import Review from '../models/Review.js';
 import Notification from '../models/Notification.js';
 
+// Official MedRentia 9 Baseline Healthcare Categories
+export const categoryData = [
+  {
+    name: 'Mobility Equipment',
+    slug: 'mobility-equipment',
+    description: 'Wheelchairs, motorized power chairs, walkers, crutches, and patient transfer hoists.',
+    iconName: 'Accessibility',
+    image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    name: 'Home Healthcare Equipment',
+    slug: 'home-healthcare-equipment',
+    description: 'Adjustable manual & electric hospital beds, anti-bedsore mattresses, commode chairs, and walking sticks.',
+    iconName: 'Home',
+    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    name: 'Respiratory Equipment',
+    slug: 'respiratory-equipment',
+    description: 'Medical oxygen concentrators, CPAP/BiPAP sleep therapy machines, cylinders, and compressor nebulizers.',
+    iconName: 'Wind',
+    image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    name: 'Monitoring Devices',
+    slug: 'monitoring-devices',
+    description: 'Multi-parameter bedside patient monitors, continuous pulse oximeters, digital BP monitors, and ECG units.',
+    iconName: 'Activity',
+    image: 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    name: 'Diagnostic Equipment',
+    slug: 'diagnostic-equipment',
+    description: 'Portable color Doppler ultrasound machines, 12-channel ECG electrocardiographs, and mobile X-ray scanners.',
+    iconName: 'Stethoscope',
+    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    name: 'Therapy & Rehabilitation',
+    slug: 'therapy-rehabilitation',
+    description: 'Active-passive motorized physiotherapy cycles, 4-channel digital TENS pain relievers, and continuous passive motion (CPM) units.',
+    iconName: 'Smile',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    name: 'ICU Equipment',
+    slug: 'icu-equipment',
+    description: 'Invasive & Non-invasive ICU ventilators, multi-lead cardiac monitors, automated external defibrillators (AED), and syringe infusion pumps.',
+    iconName: 'HeartPulse',
+    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    name: 'Surgical Equipment',
+    slug: 'surgical-equipment',
+    description: 'High-vacuum surgical suction units, precision syringe drivers, micro-infusion volumetric pumps, and cautery instruments.',
+    iconName: 'Scissors',
+    image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    name: 'Specialized Equipment',
+    slug: 'specialized-equipment',
+    description: 'Hemodialysis clinical units, modular wheelchair access ramps, and pediatric oxygen therapy units.',
+    iconName: 'ShieldCheck',
+    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+];
+
+// Independent Category Seeder: guarantees categories exist even if users already exist
+export const seedCategoriesIfEmpty = async () => {
+  try {
+    const categoryCount = await Category.countDocuments();
+    if (categoryCount === 0) {
+      console.log('[MedRentia Seed] Categories collection empty. Seeding 9 official baseline healthcare categories...');
+      const created = await Category.insertMany(categoryData);
+      console.log(`[MedRentia Seed] Successfully seeded ${created.length} categories.`);
+      return created;
+    }
+    return await Category.find({ isActive: true });
+  } catch (err) {
+    console.error('[MedRentia Category Seed Error]:', err.message);
+  }
+};
+
 export const seedDataInternal = async () => {
   try {
+    // 1. Ensure categories are seeded independently
+    const categories = await seedCategoriesIfEmpty();
+
     const userCount = await User.countDocuments();
     if (userCount > 0) {
-      console.log('[MedRentia Seed] Database already contains records. Skipping duplicate seeding.');
+      console.log('[MedRentia Seed] Users/Equipment already exist in database. Skipping duplicate demo accounts seeding.');
       return;
     }
 
     console.log('[MedRentia Seed] Populating verified healthcare catalog and accounts...');
 
-    // 1. Create Demo Accounts
+    // 2. Create Demo Accounts
     const hashedPassword = await bcrypt.hash('MedRentia@123', 10);
 
     const users = await User.insertMany([
@@ -80,76 +175,9 @@ export const seedDataInternal = async () => {
 
     const [customerUser, providerUser, adminUser] = users;
 
-    // 2. Categories (9 items)
-    const categoryData = [
-      {
-        name: 'Mobility Equipment',
-        slug: 'mobility-equipment',
-        description: 'Wheelchairs, motorized power chairs, walkers, crutches, and patient transfer hoists.',
-        iconName: 'Accessibility',
-        image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80',
-      },
-      {
-        name: 'Home Healthcare Equipment',
-        slug: 'home-healthcare-equipment',
-        description: 'Adjustable manual & electric hospital beds, anti-bedsore mattresses, commode chairs, and walking sticks.',
-        iconName: 'Home',
-        image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80',
-      },
-      {
-        name: 'Respiratory Equipment',
-        slug: 'respiratory-equipment',
-        description: 'Medical oxygen concentrators, CPAP/BiPAP sleep therapy machines, cylinders, and compressor nebulizers.',
-        iconName: 'Wind',
-        image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80',
-      },
-      {
-        name: 'Monitoring Devices',
-        slug: 'monitoring-devices',
-        description: 'Multi-parameter bedside patient monitors, continuous pulse oximeters, digital BP monitors, and ECG units.',
-        iconName: 'Activity',
-        image: 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=800&q=80',
-      },
-      {
-        name: 'Diagnostic Equipment',
-        slug: 'diagnostic-equipment',
-        description: 'Portable color Doppler ultrasound machines, 12-channel ECG electrocardiographs, and mobile X-ray scanners.',
-        iconName: 'Stethoscope',
-        image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=800&q=80',
-      },
-      {
-        name: 'Therapy & Rehabilitation',
-        slug: 'therapy-rehabilitation',
-        description: 'Active-passive motorized physiotherapy cycles, 4-channel digital TENS pain relievers, and continuous passive motion (CPM) units.',
-        iconName: 'Smile',
-        image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80',
-      },
-      {
-        name: 'ICU Equipment',
-        slug: 'icu-equipment',
-        description: 'Invasive & Non-invasive ICU ventilators, multi-lead cardiac monitors, automated external defibrillators (AED), and syringe infusion pumps.',
-        iconName: 'HeartPulse',
-        image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80',
-      },
-      {
-        name: 'Surgical Equipment',
-        slug: 'surgical-equipment',
-        description: 'High-vacuum surgical suction units, precision syringe drivers, micro-infusion volumetric pumps, and cautery instruments.',
-        iconName: 'Scissors',
-        image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=800&q=80',
-      },
-      {
-        name: 'Specialized Equipment',
-        slug: 'specialized-equipment',
-        description: 'Hemodialysis clinical units, modular wheelchair access ramps, and pediatric oxygen therapy units.',
-        iconName: 'ShieldCheck',
-        image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
-      },
-    ];
-
-    const categories = await Category.insertMany(categoryData);
     const catMap = {};
-    categories.forEach((c) => (catMap[c.name] = c._id));
+    const allCategories = await Category.find();
+    allCategories.forEach((c) => (catMap[c.name] = c._id));
 
     // 3. 15+ Verified Medical Equipment Listings with Exact Image Matching
     const equipmentList = [
