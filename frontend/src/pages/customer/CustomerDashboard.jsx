@@ -18,18 +18,21 @@ import {
   Save,
   Phone,
   Mail,
+  Star,
 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import EmptyState from '../../components/common/EmptyState';
+import { handleImageError, getExactMedicalImage } from '../../utils/imageFallback';
 
 const CustomerDashboard = () => {
   const { user, updateProfile } = useAuth();
   const { t } = useLanguage();
   const [rentals, setRentals] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [availableEquipment, setAvailableEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Profile Form state
@@ -68,9 +71,10 @@ const CustomerDashboard = () => {
     const fetchCustomerData = async () => {
       setLoading(true);
       try {
-        const [rentalsRes, ordersRes] = await Promise.all([
+        const [rentalsRes, ordersRes, equipRes] = await Promise.all([
           api.get('/rentals'),
           api.get('/orders'),
+          api.get('/equipment?limit=6'),
         ]);
 
         if (rentalsRes.data?.success && Array.isArray(rentalsRes.data.data)) {
@@ -78,6 +82,9 @@ const CustomerDashboard = () => {
         }
         if (ordersRes.data?.success && Array.isArray(ordersRes.data.data)) {
           setOrders(ordersRes.data.data);
+        }
+        if (equipRes.data?.success && Array.isArray(equipRes.data.data)) {
+          setAvailableEquipment(equipRes.data.data);
         }
       } catch (err) {
         console.error('Customer dashboard error:', err);
@@ -400,6 +407,100 @@ const CustomerDashboard = () => {
             </table>
           </div>
         </div>
+
+        {/* AVAILABLE EQUIPMENT SECTION FOR DIRECT RENTAL */}
+        {availableEquipment.length > 0 && (
+          <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-slate-100 gap-2">
+              <div>
+                <h3 className="text-xl font-black text-navy-950">Available Medical Equipment for Direct Rental</h3>
+                <p className="text-xs text-slate-500">
+                  Certified sanitized hospital-grade devices ready for immediate 3-hour doorstep delivery.
+                </p>
+              </div>
+              <Link
+                to="/equipment"
+                className="text-xs font-bold text-medblue-600 hover:text-medblue-700 flex items-center space-x-1 shrink-0"
+              >
+                <span>Browse Full Marketplace</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {availableEquipment.map((item) => (
+                <div
+                  key={item._id}
+                  className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/80 hover:border-medblue-400 hover:shadow-md transition-all flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="relative h-44 bg-slate-100 overflow-hidden">
+                      <img
+                        src={item.images?.[0] || getExactMedicalImage(item.name, item.categoryName)}
+                        alt={item.name}
+                        onError={(e) => handleImageError(e, item.name, item.categoryName)}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <span className="absolute top-3 left-3 px-2.5 py-0.5 bg-white/95 backdrop-blur-md rounded-full text-[10px] font-bold text-medblue-800 shadow-sm">
+                        {item.categoryName}
+                      </span>
+                      <span className="absolute top-3 right-3 px-2 py-0.5 bg-emerald-500 text-white rounded-full text-[10px] font-bold flex items-center space-x-1 shadow-sm">
+                        <Star className="w-3 h-3 fill-current" />
+                        <span>{item.rating || 4.9}</span>
+                      </span>
+                    </div>
+
+                    <div className="p-4 space-y-1.5">
+                      <h4 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-medblue-600 transition-colors">
+                        {item.name}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                        {item.shortDescription}
+                      </p>
+                      <div className="pt-1 flex items-center justify-between text-[10px] text-slate-500">
+                        <span>Deposit: <strong>₹{item.securityDeposit}</strong></span>
+                        <span className="text-emerald-600 font-semibold flex items-center space-x-1">
+                          <Sparkles className="w-3 h-3" />
+                          <span>Sanitized</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-0">
+                    <div className="pt-2 border-t border-slate-200 flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-semibold">Rental Price</span>
+                        <p className="text-base font-black text-navy-950">
+                          ₹{item.dailyPrice?.toLocaleString('en-IN')}<span className="text-[10px] font-normal text-slate-500">/day</span>
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-medblue-600 font-bold bg-medblue-50 px-2 py-1 rounded-lg">
+                        ₹{item.weeklyPrice?.toLocaleString('en-IN')}/wk
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        to={`/equipment/${item._id}`}
+                        className="py-2 text-center bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 rounded-xl text-xs font-bold transition-colors"
+                      >
+                        Details
+                      </Link>
+                      <Link
+                        to={`/equipment/${item._id}`}
+                        className="py-2 text-center bg-medblue-600 hover:bg-medblue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center space-x-1"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>Rent Now</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* PROFILE & DELIVERY ADDRESS MANAGEMENT */}
         <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm space-y-6">

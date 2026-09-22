@@ -396,12 +396,13 @@ const LandingPage = () => {
                     >
                       View Details
                     </Link>
-                    <button
-                      onClick={() => addToCart(item, 'weekly', 1, 1)}
-                      className="py-2.5 text-center bg-medblue-600 hover:bg-medblue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
+                    <Link
+                      to={`/equipment/${item._id}`}
+                      className="py-2.5 text-center bg-medblue-600 hover:bg-medblue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center space-x-1"
                     >
-                      Rent Now
-                    </button>
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>Rent Now</span>
+                    </Link>
                   </div>
                 </div>
               </div>

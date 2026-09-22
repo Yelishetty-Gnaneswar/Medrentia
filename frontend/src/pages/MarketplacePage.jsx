@@ -373,13 +373,13 @@ const MarketplacePage = () => {
                           >
                             Details
                           </Link>
-                          <button
-                            onClick={() => addToCart(item, selectedDuration, 1, 1)}
+                          <Link
+                            to={`/equipment/${item._id}`}
                             className="py-2.5 text-center bg-medblue-600 hover:bg-medblue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center space-x-1"
                           >
                             <ShoppingBag className="w-3.5 h-3.5" />
                             <span>Rent Now</span>
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
